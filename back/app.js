@@ -12,7 +12,7 @@ const helmet = require('helmet');
 const flash = require('connect-flash');
 
 const app = express();
-const port = 3065;
+const port = 80;
 
 // db 관련
 const db = require('./models');
