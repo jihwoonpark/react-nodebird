@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx nodemon -e js,html app.js",
+    "start": "node app.js",
     "dev": "npx nodemon -e js,html app.js"
   },
   "author": "jihwoonpark",
