@@ -138,3 +138,5 @@ typings/
 node_modules
 .env
 .next
+test.pem
+test.ppk
