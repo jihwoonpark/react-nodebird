@@ -1,0 +1,592 @@
+
+//2020.06.21 react-nodebird 리뉴얼 강좌 필기
+  예전 강좌에에서 적었던거 그대로 가져왔고 추가내용 필기 함
+
+//1-5 next
+-npm init => package.json 파일생성
+ name, version, author, license만 기재하고 yes 함
+-npm i next@9 react react-dom //next@9 9버전 설치
+
+- pages 폴더 > index.js 생성
+ - next를 프레임워크로 쓰면 import안해도 정상작동 함
+ - next에서는 반드시 pages 폴더에 각 페이지js파일을 넣어야 함
+
+- next9버전 동적 라우팅
+ - [name].js => 동적라우팅
+
+- next에는 _app.js과 같이 특수한 js들이 있음
+ - _document.js, _app.js, _error.js는 next에서 기본 내장되어 있지만
+   우리가 해당 파일들을 만들어서 코드를 적으면, 기본내장 파일을 덮어쓰게 됨
+ - 최상위 _document.js : html, head, body 담당
+ - 차상위 _app.js : root (랜더링할 components)
+ - 하위 pages : 실제 component
+ - 에러발생 : _error.js (기본 내장코드가 좋아서 굳이 코드를 적어서 덮어쓸 필요없음)
+
+- npm i prop-types :react에서 eslint통해 부모에게서 올바른 type의 props를 받았는지 확인하는 기능
+
+//1-6 Link와 eslint
+ -npm i -D eslint 
+ -npm i eslint-plugin-import -D
+ -npm i eslint-plugin-react -D
+ -npm i eslint-plugin-react-hooks -D
+ -devDe와 일반 dependencies의 차이? dev는 프로그래밍할때만 필요한 파일이고, 일반 dep는 앱에서 사용하는 파일
+ -.eslintrc파일 생성 후 옵션 지정 - .eslintrc파일 참조
+
+ -react와 nunjucks같은 template engine을 같이 쓸 수 있다고 함
+
+//2-1 ant와 styled-component
+-ant design : bootstrap, material UI와 같은 라이브러리, 최근 인기많음
+-npm i antd styled-components @ant-design/icons
+-npm trends.com
+
+
+//2-2 _app.js와 Head
+-_app.js 생성
+ import 'antd/dist/amtd.css';
+// 아래처럼 적지않고, _app.js에 위와 같이 적어도 정상 작동함
+
+ ant design을 적용하려면 아래와 같이 next에서 Head를 import 한다음 link를 걸어줘야 함
+ antdesign 홈페이지 > Docs > Ant Design of React > import in Brower > cndjsv4.0.0 클릭 > css tab > 주소 붙여넣음 
+<!-- <Head>
+    <title>NodeBird</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.0.0/antd.css"/>
+</Head> -->
+
+ -next에서는 pages가 route하는 폴더이고, _app.js 파일을 만들면 자동으로 부모 콤포넌트가 됨
+ -index, profile, signup에서 공통으로 사용했던 코드를 _app.js로 옮기고 삭제함
+ -공통으로 Head 부분 정하고 싶으면 import Head from 'next/head' 로 Head 콤포넌트를 불러와야 함
+
+//2-3 반응형 그리드 사용하기
+ - 코딩시 모바일 환경을 먼저 디자인하고, 테블릿, 데스크탑으로 확장하면서 코딩하는게 효율적
+ - 가로로 먼저, 세로로 이후, 모바일먼저, 데스크탑 나중에
+ - 이미지 업로드
+ - 업로드한 이미지 미리보기
+ - Card에서 actions : 카드 바로 밑에 보여지는 요소
+ - Card extra : 카드 오른쪽 위에 위치시킴*
+ - Card.Meta : 카드 세부정보
+ - Card.Meta avatar : 썸네일같은 이미지
+ - Icon : ant design 제공 콤포넌트, 쓰는 방법 달라짐
+
+//2-4 로그인폼 만들기
+ - react form 라이브러리 사용하는거 권장
+
+//2-5 리랜더링 이해하기
+ - 인라인 sytle하면 계속 리랜더링되어서 다른 방법으로 style 줘야 함
+ - userMemo를 사용하면 인라인 style줘도 됨 / userMemo는 값을 캐싱함
+
+//2-6 더미데이터로 로그인하기  
+
+//2-7 크롬 확장프로그램과 Q&A
+ - <a rel="noreferrer nopener"> : 보안관련해서 적어주는 것이 좋음
+ - echart : 중국개발 사이트
+ 
+//2-8 프로필 페이지 만들기
+ - 내 정보를 볼 수 있는 페이지
+ - List grid: item의 간격 조절 
+ - loadMore : 더 불러오기 
+ - dataSource : renderItem에서 item
+
+//2-9 회원가입 페이지 만들기(커스텀훅)
+ -Button에 loading 상태 표시 가능
+  Button type="primary" htmlType="submit" loading={true}
+ -react에서 다른 component들을 많이 리랜더링시키면 해당 component는 분리함
+ -AppLayout에 있던 Form을 LoginForm.js로 옮김
+ -signup.js에서 export const useInput => useInput를 다른 compo도 사용하게 함
+
+//3-1 리덕스 설치와 필요성 소개
+ - npm i next-redux-wrapper redux
+ - npm i react-redux
+ - 리덕스 래퍼는 일반 리덕스 사용법과는 차이가 있음
+ - _app.js에서 콤포넌트를 더이상 <Provider store={store}/>이렇게 감싸면 오류남
+   => 자동으로 provider가 생성됨 
+
+- store에서 모든 상태를 관리하면 파일이 너무 커지므로, 
+  부모store와 여러개의 자식 store를 생성해서 관리할 수 있음
+- state 구조 잡기 어려움
+- redux와 react 연결하기 : next-redux-wrapper
+- withRedux)(NodeBird)) -> NodeBird에 store를 넣어줌
+
+//3-2 리덕스의 원리와 불변성
+ - {} === {} => 객체와 객체를 비교하면 false
+ - const a = {};
+   const b = a;
+   a === b //true
+   => 새로운 객체를 비교하면 false인데 참조가 있으면 true
+
+//3-3 리덕스 실제 구현하기
+ - 리액트 state와 리덕스 state를 같이 사용하는 이유 
+ - 리덕스 state를 단독사용하면 작성해야 하는 action과 reducer가 늘어나고 복잡해짐
+- form 같이 onchange 사용하는 component들의 상태는 리액트에서 관리함
+
+//3-4 미들웨어와 리덕스 데브툴즈
+ - import {HYDRATE} from 'next-redux-wrapper';
+ - npm i redux-devtools-extension
+
+ - package.json : -p 3060 포트변경
+   "scripts": {+
+    "dev": "next -p 3060",
+    "build": "next build"
+  },
+
+//3-5 리듀서 쪼개기
+ - reducers > index.js를 user.js와 post.js로 나눔
+
+
+//3-6 더미데이터와 포스트폼 만들기
+ - 최신문법, optional chaining 연산자
+  me && me.id ==> me?.id; 이렇게 써도 된다고 함
+
+
+//3-7 게시글 구현하기
+ - PostCard.js, PostForm.js
+
+
+//3-8 댓글 구현하기 
+ - CommentForm.js
+
+//3-9 이미지 구현하기
+ - PostImages.js
+
+//3-10 이미지 캐루셀 구현하기(react-slick)
+ - npm i react-slick
+ - function`` === function() => ``는 함수를 실행하라는 문법
+ - 인라인 스타일을 넣어도 깨짐, globalstyle로 slick의 class 이름을 chrome 콘솔창에서 알아낸 다음
+   덮어씀
+
+  const Global = createGlobalStyle`
+      /* 클래스명이 바뀌지 않고 그대로 적용됨 */
+      .slick-slide {
+          display:inline-block;
+      }
+  `;
+
+   <Overlay>
+    <Global/>
+
+(예전6-13) react-slick으로 이미지 슬라이더구현
+- +더보기 구현
+- npm i -s react-slick
+- components>ImagesZoom js 만듬
+- react-slick사용하려면 _app.js에 Provider>Head에 cdn link 걸어줘야 함
+- 이미지 슬라이더 닫기 함수의 실행은 여기서 함 => 아직 props 주고받는 로직에 익숙치 않음
+
+
+
+//3-11 글로벌 스타일과 컴포넌트 폴더 구조
+ - components폴더에 imagesZoom 폴더를 만들고 index.js 콤포넌트를 만드는 이유?
+   index.js에서 styled-components로 만든 콤포넌트를 style.js로 분리하기 위해
+   로직에 필요한 파일만 남기고, style을 위한 콤포넌트는 다른 파일로 분리하면 유지관리 편리함
+
+//3-12 게시글 해시태그 링크로 만들기
+ - regexr.com : 정규표현식 연습 사이트
+
+
+//4-1 redux-thunk이해하기
+ -npm i redex-thunk : 비동기 처리를 지원하는 라이브러리
+
+ const loggerMiddleware = ({dispatch, getState}) => (next) => (action) =>{
+     console.log(action);
+     return next(action)
+ }
+
+ const middlewares = [thunkMiddleware,loggerMiddleware];
+
+//4-2 saga 설치하고 generator 이해하기
+ - redux는 동기처리밖에 못하는데, saga가 비동기 통신을 할 수 있게 도와줌
+ - npm i redux-saga next-redux-saga
+ - 원리) redux의 LOG_IN액션을 중간에서 redux-saga가 받아서, 
+   서버와 비동기통신을 한 후 SUCCESS했는지 FAILURE했는지 확인하고,
+   SUCCESS와 FAILURE에 따라서 다른 액션을 취함
+   (saga없으면 LOG_IN액션을 redux의 reducer가 받아서 바로 실행)
+ - 제너레이터 : 무한개념과 비동기처리 시 사용
+ - index.js사가에 user.js, post.js 사가가 포함됨
+  (rootreducer 안에 여러 reducer 포함시킬 수 있음)
+ - take:특정액션에 대해 한번만 특정함수실행 (액션이 여러번 와도 한번실행만 함)
+   while,for 반복문 쓰면 해결되는데, takeEvery,takeLatest 등으로 대체
+ - takeEvery:특정액션 생성시마다 특정함수실행  
+ - takeLatest:가장 마지막에 들어온 액션 하나만 받아서 특정함수실행
+ - takeLeading:가장 먼저 들어온 액션 하나만 받아서 특정함수실행
+ 
+ - effects : redux saga middleware에 특정 작업하라고 명령하는 함수같은 것
+  - fork():비동기 호출
+  - call():동기 통신을 실행시킴
+  - put():dipatch
+  - delay(1000):1초 동안 들어온 모든 액션을 잡아두고 있다가 한꺼번에 실행
+  - race, cancel, select, throttle, debounce 등도 자주씀
+
+ - 동영상 내용으로 하면 에러나서 깃헙에 있는 _app.js 코드 중 
+   saga관련 된 부분만 붙여 넣음
+ - _app.js 코드 configureStore에서, window.__REDUX_DEVTOOLS_EXTENSION는
+  빼주는데, 이유는 상태관리 흐름이 다 노출되어 보안상 문제를 야기하기때문
+ - process.env.NODE_ENV === 'production'이 참이면 실제 서비스라는 의미 / 'development는 개발환경
+ - qerring 문법 : 인자 하나만 있는 함수들을 계속 반환하는 문법 - 잘 이해 안감
+  (a)=> (b)=> (c) =>... 함수를 여러개 연달아서 사용하는 것이라고 함
+ 
+ - high order component 설명했는데 잘 이해안감
+  - 실제 Component를 감싸고 있는 hihg order component
+  - 실제 Component를 수정해서 덮워, 새로운 기능을 추가할 때 사용
+  - 원래 props를 다른 props로 수정, 
+  hoc(Component)
+  const hoc = (Component) => () =>{
+   console.log('i'm');
+   return (
+     Component hello="" Im hoc"
+   )
+ }
+
+ 
+ # 패캠 react 강의 generator 문법에서 내용 가져옴
+ - 함수의 흐름을 특정구간에 멈춰놓았다가 다시 실행 가능
+ - 결과값을 여러번 내보낼 수 있음
+ - (인프런강의추가)
+ - yield는 async await문법에서 await과 비슷한 역할 함
+ - yield* '12345': '12345'를 반복 => 1,2,3,4,5 따로나옴
+ - yield* [1,2,3,4] => yield 1; yield 2; yield 3; yield 4;
+ 
+ - take:특정액션에 대해 한번만 특정함수실행 (액션이 여러번 와도 한번실행만 함)
+   while,for 반복문 쓰면 해결되는데, takeEvery,takeLatest 등으로 대체
+ - takeEvery:특정액션 생성시마다 특정함수실행  
+ - takeLatest:가장 마지막에 들어온 액션 하나만 받아서 특정함수실행
+   => 그런데, front에서 가는 요청은 여러번 그대로 가고, 응답만 한개를 받고 여러개의 응답을 취소함
+   => 따라서, back에서 여러번 오는 요청이 동일한 요청인지 확인을 해야 함
+   => throttle을 쓰면 요청을 한번만 보낼 수 있음
+ - takeLeading:가장 먼저 들어온 액션 하나만 받아서 특정함수실행
+ - fork():비동기호출
+ - call():동기 통신, put():dipatch, 
+ - delay(1000):1초 동안 들어온 모든 액션을 잡아두고 있다가 한꺼번에 실행
+
+ //첫번째 예제
+  > function* generatorFunction() {
+    console.log('안녕하세요?');
+    yield 1;
+    console.log('제너레이터 함수');
+    yield 2;
+    console.log('function*');
+    yield 3;
+    return 4;
+  }
+
+  > const gen = generatorFunction();
+  > gen // gen 상태 suspended
+  > gen.next() // '안녕하세요?', {value:1, done:false}
+  // gen.next() 2번 더하면 => gen {value:3, done:false}
+  > gen.next() // 마지막 => gen {value:3, done:true}
+
+// 두번째 예제
+-next를 호출 할 때 인자를 전달하여 이를 제너레이터 함수 내부에서 사용할 수 있음
+  > function* sumGenerator() {
+    console.log('sumGenerator이 시작됐습니다.');
+    let a = yield;
+    console.log('a값을 받았습니다.');
+    let b = yield;
+    console.log('b값을 받았습니다.');
+    return a + b;
+  }
+
+  > const suma = sumGenerator();
+  > suma.next();
+  > suma.next(2);
+  > suma.next(3); // {value: 5, done: true}
+
+// 세번째 예제
+  function* increaseSaga() {
+    yield delay(1000); // 1초동안 들어온 모든 액션을 잡아둠
+    yield put(increase()); // put은 특정 액션을 디스패치 해줍니다.
+  }
+  function* decreaseSaga() {
+    yield delay(1000); // 1초를 기다립니다.
+    yield put(decrease()); // put은 특정 액션을 디스패치 해줍니다.
+  }
+  
+  export function* counterSaga() {
+    yield takeEvery(INCREASE_ASYNC, increaseSaga); // 모든 INCREASE_ASYNC 액션을 처리
+    yield takeLatest(DECREASE_ASYNC, decreaseSaga); // 가장 마지막으로 디스패치된 DECREASE_ASYNC 액션만을 처리
+  }
+
+// 네 번째 예제 - 무한반복 / .next()로 계속 실행시킬 수 있음
+ function* helloSaga() {
+   console.log('before saga')
+   while(true){
+     yield take(HELLO_SAGA); // take는 액션한개만 실행후 끝나는데, while반복문 안에 있어서 액션올때마다 실행
+     console.log('hello saga') 
+   }
+ }
+
+
+//4-3 saga 이펙트 알아보기
+ - npm i axios
+
+//4-4 saga take, take시리즈, throttle알아보기
+ - takeEvery:특정액션 생성시마다 특정함수실행  
+ - takeLatest:가장 마지막에 들어온 액션 하나만 받아서 특정함수실행
+   => 그런데, front에서 가는 요청은 여러번 그대로 가고, 응답만 한개를 받고 여러개의 응답을 취소함
+   => 따라서, back에서 여러번 오는 요청이 동일한 요청인지 확인을 해야 함
+   => throttle을 쓰면 요청을 한번만 보낼 수 있음
+ - takeLeading:가장 먼저 들어온 액션 하나만 받아서 특정함수실행
+ 
+ - throttle: 마지막 함수가 호출된 후 일정 시간이 지나기 전에 다시 호출되지 않도록 함
+  => 특정시간 안에는 특정 요청이 한번만 보내지게 함
+  => 주로 스크롤할때 발생하는 많은 이벤트를 다룰때 사용
+ 
+ - debounce: 연이어 호출되는 함수들 중 마지막함수(또는 제일처음)만 호출하도록 함
+  => 주로 검색어 검색할때, 한글자 칠때마다 이벤트 발생하는 것 다룰때 사용
+  => 특정 단어가 완성됐을때 검색을 하도록 할 수 있음
+
+(예전7-9) 쓰로틀링(throttling)
+- 스크롤다운하면 아래부분에서 에러나고, 게시글이 추가되는 것이 아니라 대체됨
+TypeError: Cannot read property 'id' of undefined
+ lastId: mainPosts[mainPosts.length-1].id
+
+- reducer>post>LOAD_MAIN_POSTS_REQUEST 할때마다 mainpost:[]를 비워두게 하니깐 
+  앞에있던 게시글들이 사라지게 되고 위 타입에러가 발생함
+case LOAD_MAIN_POSTS_REQUEST:
+return {
+  //다른페이지에서 들어와서 이전페이지의 게시글들을 없애고 처음부터 게시글 불러와야 할때만 비움
+  // index 페이지에서 dispatch({~ ,lastId: mainPosts[mainPosts.length-1].id{)}
+  //스크롤다운해서 데이터를 추가로 불러올때(lastId에 숫자가 채워져있을때)는 기존게시글 그대로둠
+  ...state,
+  mainPosts: !action.lastId ? [] : state.mainPosts,
+};
+caseLOAD_MAIN_POSTS_SUCCESS:
+  return {
+    ...state,    
+    mainPosts: state.mainPosts.concat(action.data),//성공하면 서버로부터 받은 데이터 넣음
+  };
+
+- 난 계속 동일한 10개 게시글만 불러옴 이유 모르겠음
+ -  route>posts에서 where를 안줘서 그랬음
+ const posts = await db.Post.findAll({//모든 게시글 가져옴
+  where,
+
+- 스크롤다운하면서 지속적으로 dispatch 됨 -> 서버에 무리 엄청 감
+- 아무의미 없이 스크롤다운 하는 경우와 더이상 불러올 게시글이 없을경우
+  dispatch되는 것을 막음
+
+- reducer>post
+case LOAD_MAIN_POSTS_REQUEST:
+return {
+  ...state,
+  mainPosts: !action.lastId ? [] : state.mainPosts,
+  //처음불러올때(action.lastId=0) true-> 스크롤 활성화
+  hasMorePost: action.lastId ? state.hasMorePost : true,
+};
+
+caseLOAD_MAIN_POSTS_SUCCESS:
+return {
+  ...state,
+  mainPosts: state.mainPosts.concat(action.data),//성공하면 서버로부터 받은 데이터 넣음
+  hasMorePost: action.data.length === 10,
+};
+
+- pages>index 수정
+if(window.scrollY + document.documentElement.clientHeight > document.documentElement.scrollHeight - 300){
+  if(hasMorePost){//더 불러올 게시글이 있을때만 dispatch
+    dispatch({
+      type:LOAD_MAIN_POSTS_REQUEST,  
+      lastId: mainPosts[mainPosts.length - 1].id, //mainPosts[0] 0부터 시작
+    })
+  }
+}
+
+- 불러올 게시글이 없을때는 dispatch 못하게 했는데, 스크롤다운하면서 dispatch가 
+  단시간에 여러번 dispatch되는 현상이 나타남, 이러면 서버에 무리를 줄 수 있음
+
+- saga>post> takeLatest는 여러번의 요청에서 마지막 1개만 요청을 처리하는 것인데, 
+  여러번의 요청 자체에는 영향을 미치지 못함 => throttle 사용
+  function* watchLoadMainPosts() {
+    // yield takeLatest(LOAD_MAIN_POSTS_REQUEST, loadMainPosts);
+    //LOAD_MAIN_POSTS_REQUEST 1회호출 후, 2초동안 다시 호출안됨
+    yield throttle(2000,LOAD_MAIN_POSTS_REQUEST, loadMainPosts,)
+  }
+  
+- 그래도 LOAD_MAIN_POSTS_REQUEST 여러번 호출이 됐는데, index 페이지에서 
+  onScroll 함수를 useCallback으로 감쌈 -> 호출되는 빈도가 줄었음, 추후 최적화시기때 수정하기로함
+  const onScroll = useCallback(()=>{
+
+- pages>hashtag에도 적용 data:tag도 넣어줘야 함
+  dispatch({
+    type: LOAD_HASHTAG_POSTS_REQUEST,
+    lastId: mainPosts[mainPosts.length - 1] && mainPosts[mainPosts.length - 1].id,
+    data: tag,
+ - route>hashtag에 order 추가
+   order:[['createdAt', 'DESC']],
+
+(예전7-11) 프론트단에서 리덕스 액션 호출막기
+- throttling을 적용해도 request가 생각보다 많이 호출됨
+- saga와 reducer에서의 액션은 별개로 작용하기때문에 saga에 throttle을 했다고 해도
+  reducer에서의 request 액션 처리는 막지 못함 
+- 따라서 reducer에 dispatch하는 front 단에서 액션 호출을 막게끔 코딩
+- lastId를 front에서도 기록을 해두면 같은 lastId로 요청보내는 것을 막을 수 있음
+- pages>index 
+- useRef 사용법 까먹음
+  const refContainer = useRef(initialValue);
+  useRef는 .current 프로퍼티로 전달된 인자(initialValue)로 초기화된 
+  변경 가능한 ref 객체를 반환, 반환된 객체는 컴포넌트의 전 생애주기를 통해 유지
+- Array.includes 까먹음 -  배열이 특정 요소를 포함하고 있는지 판별 true/false
+- request action가 여러번 dispatch 되지 않음
+
+
+//4-5 saga쪼개고 reducer와 연결하기
+
+//4-6 액션과 상태 정리하기
+ - reducer, saga 액션들 정리함
+
+//4-7 바뀐상태 적용하고 eslint점검하기
+ - npm i -D babel-eslint eslint-config-airbnb eslint-plugin-import
+ - npm i -D eslint-plugin-react-hooks
+ - npm i -D eslint-plugin-jsx-a11y
+
+ - airbnb적용하려면, .eslintrc > "extensions" : "airbnb"
+ - 그런데 너무 엄격해서 에러표시가 많아짐
+ - npm i -D babel-eslint : 최신 바벨 적용할때, 검사엄격해짐
+  .eslintrc > {"parser" : "babel-eslint"}, {"env":{"es6"t:true}}
+
+//4-8 게시글, 댓글 saga작성하기
+ - npm i shortid : 랜덤한 id를 만들어주는 라이브러리
+ - npm i faker : 더미데이터 만들어줌
+ - npm i immer
+
+//4-9 게시글 삭제 saga작성하기
+ - user 리듀서와 post리듀서 연결
+
+//4-10 immer 도입하기
+ - npm i immer
+ - use-immer : react hooks에서 사용할 수 있는 라이브러리
+ - user 리듀서는 immer로 바꾸지 않음
+
+(예전7-10) immer로 불변성 쉽게 쓰기
+- 불변성 유지하면서 가독성 개선 라이브러리 immer
+- 처음부터 immer 쓰는것을 추천한다고 함
+- immer에서는 draft와 state를 비교해서 state의 불변성을 지키면서 수정해줌
+- immer는 reduecer뿐아니라 ...spread 문법 사용하는 곳이면 다 사용가능 ex)setState
+- npm i immer
+- reducer>post, user
+  import produce from 'immer';
+  return produce(state, (draft) => { 기존작성코드 여기다 옮겨적음 }
+  추가할때는 unshift, push, 지울땐 splice
+
+
+//4-11 faker로 실감나는 더미데이터 만들기
+ - npm i faker
+ - placeholder.com
+ - redux toolkit
+
+//4-12 인피니트 스크롤링 적용하기
+   useEffect(()=>{
+      function onScroll(){
+          // console.log(window.scrollY, document.documentElement.clientHeight, document.documentElement.scrollHeight)
+          //scroll이벤트가 여러번 발생함, post saga에서 throttle해도 여러번 LOAD_POSTS_REQUEST 요청이 감, 
+          //요청이 갈때는 loadPostsLoading가 true라서(loadpost가 성공하면 false), true일때만 요청이 가게끔 코딩함
+          if(window.scrollY+document.documentElement.clientHeight > document.documentElement.scrollHeight - 300){
+              if(hasMorePosts && !loadPostsLoading){
+                  dispatch({
+                      type:LOAD_POSTS_REQUEST
+                  });
+              }
+          }
+      }
+      window.addEventListener('scroll',onScroll)
+      return ()=>{
+          window.removeEventListener('scroll', onScroll)
+      }
+  },[hasMorePosts, loadPostsLoading])
+
+ - react-virtualized : 스크롤 다운할때 위에 있었던 게시물들을 지속적으로 지워서
+   일정한 수의 게시물 갯수만 유지 => 메모리 사용 효율화
+
+(예전7-8) 인피니트 스크롤링
+- 게시글 10개씩 불러오기
+- 스크롤을 감자해야 함, 윈도우에 addEventListener를 줘야 함
+- 좌표값 3가지
+ - window.scrollY:스크롤을 내린거리-창의 맨 윗단(메뉴바아래) 기준 현재좌표
+ - documentElement.clientHeight : 화면높이 - 창 맨윗단에서 스크롤 제외한 제일 밑단까지의 높이
+ - documentElement.scrollHeight : 전체화면길이 -창 맨윗단에서 스크롤포함 전체 길이
+- 스크롤이 밑에서 300정도 남았을때 데이터를 새로 가져오게 함
+
+- pages>indexjs 내용 추가함
+- 게시글은 내가 보고 있는 동안에 다른 사림이 게시글을 추가했을 수 있음
+  따라서 더보기에서 썼던 offset과 limit은 사용하지 못함
+  실제로 게시글 페이지네이션 할때, offset은 거의 쓰지 않는데 성능의 문제와 기능의 문제 
+  둘다 있기 때문
+  (follower, following 목록도 id방법으로 하는게 안전함)
+  마지막 게시글의 id를 가져와서 해당 id보다 작은 게시글을 limit해서 가져옴
+  const onScroll = ()=>{   
+    if(window.scrollY+document.documentElement.clientHeight > document.documentElement.scrollHeight - 300){
+      dispatch({
+        type:LOAD_MAIN_POSTS_REQUEST,  
+        lastId: mainPosts[mainPosts.length-1].id, //mainPosts[0] 0부터 시작
+      })
+    }
+  }
+  useEffect(()=>{
+    //onScroll함수가 여기서 실행이 되므로, mainpost에 의존성이 있게 됨
+    window.addEventListener('scroll', onScroll);
+    return ()=>{
+      window.removeEventListener('scroll', onScroll);
+    }
+  },[mainPosts.length]);
+
+- saga>post
+function loadMainPostsAPI(lastId=0, limit=10) {
+  //로그인을 하지 않아도 게시글을 볼수 있는 경우 withCredentials 안넣어도 됨
+  //게시글이 하나도 안불러왔을 경우엔 lastId가 없어서 0으로 해줌
+  //back에서 lastId가 0이면 처음부터 불러오게끔 인식됨
+ return axios.get(`/posts?lastId=${lastId}&limit=${limit}`);
+}
+function loadHashtagPostsAPI(tag, lastId) {  
+  // axios.get(`/hashtag/${encodeURIComponent(tag)}`); 
+  return axios.get(`/hashtag/${encodeURIComponent(tag)}?lastId=${lastId}&limit=10`);
+
+- loadUserPost는 스스로 고쳐 보라고 함
+
+- route>posts,
+  lastId가 0이면 첫게시글부터 가져와야 되고, 0이 아니면 해당 id보다 작은 게시글들 불러옴
+
+  let where = {};
+  if(parseInt(req.query.lastId, 10)){
+    where = {
+      id:{ // Op:연산자, lt:less than -> 받아온 id보다 작은 id의 게시글들 가져옴
+        [db.Sequelize.Op.lt]:parseInt(req.query.lastId,10)
+      }
+    }
+  } 
+  const posts = await db.Post.findAll({//모든 게시글 가져옴
+    where,
+
+- route>hashtag
+let where = {};
+if(parseInt(req.query.lastId, 10)){
+  where = {
+    id:{
+      [db.Sequelize.Op.lt]:parseInt(req.query.lastId,10)
+    }
+  }
+const posts = await db.Post.findAll({//해시태그가 있는 모든 포스트를 찾음
+  where,
+
+
+//4-13 팔로우, 언팔로우 구현하기
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  

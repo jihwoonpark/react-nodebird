@@ -1,0 +1,11 @@
+DATABASE = "데이터베이스명"
+DB_USER = "유저명"
+DB_PASSWORD = "패스워드"
+DB_HOST = "localhost"
+
+COOKIE_SECRET="쿠키비밀번호"
+
+FACEBOOK_APPID = "https://developers.facebook.com에서 추출"
+FACEBOOK_SECRETCODE = "https://developers.facebook.com에서 추출"
+
+SITE_DOMAIN = "나의 웹사이트 주소를 입력 ex) https://localhost:3000"
