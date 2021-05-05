@@ -117,7 +117,7 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
       draft.uploadImagesError = null;
       break;
     case UPLOAD_IMAGES_SUCCESS: {
-      draft.imagePaths = action.data; //back 서버로부터 이미지주소를 받음
+      draft.imagePaths = draft.imagePaths.concat(action.data); //back 서버로부터 이미지주소를 받음
       draft.uploadImagesLoading = false;
       draft.uploadImagesDone = true;
       break;
