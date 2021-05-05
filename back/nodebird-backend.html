@@ -2223,10 +2223,11 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
  => 회원가입 한 다음 홈 화면으로 안돌아가고, profile과 id 페이지 등은 오류 남
  
 
-//7-6 도메인 연결하기
+//7-6 Route53 도메인 연결하기
 - 로그인 하면 로그인 풀리는 이유
  - 크롬 network창>Response Header 
-  - set-cookie부분에 경고표시 떠 있고, 마우스올리면 samesite~ 때문이라고 나옴//강사님은 도메인이 유효하지 않다는 오류남
+ - set-cookie부분에 경고표시 떠 있고, 마우스올리면 samesite~ 때문이라고 나옴
+ - 강사님은 도메인관련 경고표시가 뜨는데 나는 뜨지 않음
    Set-Cookie: rnbck=s%3AmtOCo8kpgKIWd2fVNpMAgksOcqEzNcBs.TysluB5DhRZwaZAuPfZalBACSYcG6pse6nBun%2FmYewY; 
    Path=/; Expires=Wed, 05 May 2021 08:33:40 GMT; HttpOnly
 
@@ -2242,6 +2243,43 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
       secure:true,
       maxAge:2000*60*60 //지속시간 2시간
     },
+
+=> back app.sjs 세팅을 해도 여전히 로그인이 풀림
+
+- 후이즈도메인에서 aserang.com aserang.co.kr 도메인 구매, 3년 계약
+- 도메인 name server는 aws Route53에서 생성 한 aserang.com 호스트 영역의 라우팅 대상 값을 입력함
+- 탄력적 IP할당 : front, back
+ - 인스턴스와 연결하면 무료로 사용할 수 있음 => 인스턴스 연결해제 후에 탄력적IP도 release해줘야 요금안나옴
+ - 탄력적 IP주소연결 => EC2 front, back과 연결
+ - EC2 인스턴스의 IP가 고정이 됨
+
+- Route53으로 가서 레코드 3개 생성
+ - 레코드유형 A-IPv4~ | 값 EC2 front에서 할당받은 탄력적 IP주소 기입
+ - 이름 api.aserang.com| 레코드유형 A-IPv4~ | 값 EC2 back에서 할당받은 탄력적 IP주소 기입
+ - 이름 www.aserang.com| 레코드유형 CNAME (별칭) | 값 aserang.com
+
+- 로컬 front>config 수정
+ - export const backUrl = process.env.NODE_ENV === 'production' ? 'http://api.aserang.com' : 'http://localhost:3065';
+
+- 로컬 back>app.js 수정
+  app.use(cors({ 
+	origin: ['http://localhost:3060','http://aserang.com'],
+
+  app.use(expressSession({
+	resave:false,
+	saveUninitialized:false,
+	secret:process.env.COOKIE_SECRET,
+	cookie:{
+		httpOnly:true,
+		sameSite:"none",
+		secure:true,
+		domain: process.env.NODE_ENV ==='production' && '.aserang.com',//.aserang=>(.)점을 붙여야 api.aserang과 aserang과의 쿠키공유가능
+		maxAge:2000*60*60 //지속시간 2시간
+	},
+
+- https로만 접속할 수 있도록 설정한 것 수정하는 방법
+ - chrome hsts삭제하는방법
+ - https://jaimemin.tistory.com/1518
 
 
 //7-7 S3연결하기

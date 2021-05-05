@@ -57,7 +57,7 @@ if(process.env.NODE_ENV === 'production'){
 
 app.use(cors({//쿠키를 주고 받을 수 있게 함
     //'*'-모든 요청을 받아줌, true-보낸곳의 주소가 자동으로 들어감 'http://localhost:3000'-해당 도메인만 허용
-	origin: ['http://localhost:3060','nodebird.com','http://15.164.230.99'], 
+	origin: ['http://localhost:3060','http://aserang.com'], 
 	credentials: true,// true로 해야지 쿠키도 전달됨, front axios에서도 설정해줘야 함
 }));
 //'/'는 uploads폴더를 root 폴더인것처럼 사용할 수 있게 함(front에서 /img-cj~.png로 접근가능)
@@ -83,6 +83,7 @@ app.use(expressSession({
 		httpOnly:true,
 		sameSite:"none",
 		secure:true,
+		domain: process.env.NODE_ENV ==='production' && '.aserang.com',//.aserang=>(.)점을 붙여야 api.aserang과 aserang과의 쿠키공유가능
 		maxAge:2000*60*60 //지속시간 2시간
 	},
 	store: new FileStore(),
