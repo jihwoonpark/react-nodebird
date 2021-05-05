@@ -81,7 +81,8 @@ app.use(expressSession({
 	secret:process.env.COOKIE_SECRET,
 	cookie:{
 		httpOnly:true,
-		secure:false,
+		sameSite:"none",
+		secure:true,
 		maxAge:2000*60*60 //지속시간 2시간
 	},
 	store: new FileStore(),

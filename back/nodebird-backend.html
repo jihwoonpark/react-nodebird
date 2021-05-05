@@ -2042,14 +2042,212 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
  - .gitignore 생성 후 작성
   - github에 push하지 않을 파일들 적음
  - prepare폴더에서 git init
+  - git 폴더로 만듬 .git 생김
+  - git remote add origin 'github 주소'
+  - git add .
+  - git commit -m "aws~"
+  - git push origin master
+ - .gitignore이 제대로 적용 안됏으면 github repo 삭제 후 재생성 해야 함.
+ 
+ - EC2 front 연결 
+  - 로컬컴퓨터 git bash > ssh -i "test.pem" ubuntu@ec2-3-34-90-243.ap-northeast-2.compute.amazonaws.com
+  - git clone github 주소
+  - EC2 front 서버로 이동 함 cd react-nodebird/front  
 
 //7-2 우분투에 노드 설치하기
+ - EC2 front 서버
+  - 리눅스에서 node 설치 명령어 
+   - sudo apt-get update
+   - sudo apt-get install -y build-essential 
+    => bcrypt와 shape(이미지리사이징) 등의 설치를 위해 필요
+   - curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash --
+    => 설치 파일이 있는 주소를 입력하고 다운받아라 | 관리자권한으로
+   - sudo apt-get install -y nodejs
+   
+  - npm i 
+  - npm run build 프론트에서는 빌드부터 해야 함
+   => 아직 db연결 안됐고, EC2 back url, 포트번호 때문에 빌드오류남
+  
+  - 로컬 컴퓨터 front 
+   - getStaticProps들 주석처리
+   - front>config> config.js 생성 후 작성
+     export const backUrl = process.env.NODE_ENV === 'production' ? 'http://13.209.99.201' : 'http://localhost:3065';
+   - saga index, ImageZoom, postform, postImage 콤포넌트 url수정
+   - package.json : 포트 3060->80
+    "scripts": {
+      "dev": "next -p 3060",
+      "build": "cross-env ANALYZE=true NODE_ENV=production next build",
+      "start": "cross-env NODE_ENV=production next start -p 80"
+    },
+   - 수정 후 git add, commit, push
+
+  -EC2 front
+   - git pull  
+
 //7-3 우분투에 MySQL 설치하기
+- EC2 back 연결 
+  - 로컬컴퓨터 git bash > ssh -i "test.pem"~
+  - git clone github 주소
+  - EC2 back 서버로 이동 함 cd react-nodebird/back
+  - nodejs 설치
+  - npm i 
+
+  //mysql 8버전 다운로드 참고 사이트 https://awakening95.tistory.com/2
+  - sudo wget -c https://dev.mysql.com/get/mysql-apt-config_0.8.13-1_all.deb
+  - sudo dpkg -i mysql-apt-config_0.8.13-1_all.deb 
+    => 빨간색 MySQL server & cluster (currently selected:mysql 5.X) => 엔터 => mysql 8.0 선택 후 엔터
+    => 빨간색 MySQL server & cluster (currently selected:mysql 8.0) 확인 후 맨 아래 ok 클릭
+  - sudo apt update
+  - sudo apt install -y mysql-server
+    => 분홍색 package configuration 창 뜸 => root password 입력
+    => 장문의 영문글 ok가 잘 안쳐지는데, 방향키 우측키를 사용하면 빨간색으로 ok 클릭할 수 있음 => ok클릭
+    => Use Strong Password Encryption (RECOMMENED) 클릭 => ok
+
+  - sudo su (root로 변경/권한막강 => su ubuntu(다시 ubuntu 유저로))
+  - sudo mysql_secure_installation 
+    => Press y|Y for Yes, any other key for No: N => y로 하고 비밀번호를 다시 지정
+    => 이것 이외의 것은 다 y로 하고, 비밀번호는 con~으로 지정 함
+    
+  - mysql -uroot -p (root권한일때만 접속가능)
+    mysql> exit;  (;까지 쳐야 빠져나옴)
+
+  - npm start가 안되서 package.json 수정함    
+    "scripts": {
+        "start": "node app.js",
+        "dev": "npx nodemon -e js,html app.js"
+      },
+  - 내 로컬컴퓨터 터미널에서 진행
+    git add package.json
+    git commit -m""
+    git push origin master
+
+  - EC2 back 서버 git bash 터미널
+    - .env를 만들어 줘야 함
+    - vim .env 로컬과 동일한 env파일 만들어 줌
+    - npm start를 하면 database에 접근을 할 수 없다고 나옴
+    - 비밀번호를 다시 한번 변경함
+    - sudo su : root계정으로 먼저 변경
+    - mysql -u root -p
+    mysql>ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '**';
+    => mysql your password does not satisfy the current policy requirements에러 남
+      MySQL이 새로 업로드 된후에 패스워드 정책이 변경 되어서 나는 에러
+
+    mysql>SHOW VARIABLES LIKE 'validate_password%';
+    +--------------------------------------+--------+
+    | Variable_name                        | Value  |
+    +--------------------------------------+--------+
+    | validate_password.check_user_name    | ON     |
+    | validate_password.dictionary_file    |        |
+    | validate_password.length             | 8      |
+    | validate_password.mixed_case_count   | 1      |
+    | validate_password.number_count       | 1      |
+    | validate_password.policy             | STRONG |
+    | validate_password.special_char_count | 1      |
+    +--------------------------------------+--------+
+    제일 위의 validate_password_check_user_name은 패스워드에 user id가 들어갔는지 묻는것이다.
+    필자의 경우 아이디와 패스워드가 모두 root인데 만약 on이 켜져있다면 이는 불가능하다.
+    length는 당연히 길이를 의미한다. 8자 이상이어야 한다는 이야기이다.
+    mixed case count는 대소문자를 적어도 1회이상은 써야한다는 것이다.
+    밑의 nuber count도 숫자를 적어도 1회 이상은 써야한다는 것이다.
+    마지막의 special char count는 특수문자를 적어도 1회 이상은 써야한다는 것이다.
+    만약 위 정책을 끄고싶다면 이 파라메터가 low가 되어있어야한다.
+    
+    mysql>SET GLOBAL validate_password_policy=LOW;
+    => 나는 정책은 그대로 두고 비밀번호를 까다롭게 함
+
+  - vim .env에서 비밀번호 수정함
+  - npx sequelize db:create
+    => Database reactnodebird created.
+  - npm start 
+    => database 연결 잘됨, 그런데 EC2 ip 주소 때문에, port를 바꿔줘야 함
+  - vim app.js
+    const port = 3065 => 80; 으로 수정
+  - npm start 
+    => 잘 실행 됨
+
 //7-4 pm2 사용하기 
+ - pm2 : 백그라운드에서 서버 실행시켜 주는 프로그램
+ - pm2 명령어
+   sudo npx pm2 start npm -- start : pm2에서 npm 명령어 치기
+   sudo npx pm2 list 로 리스트를 확인
+   sudo npx pm2 stop id번호 => npx pm2 stop 1
+   sudo npx pm2 kill
+   sudo npx pm2 monit
+   sudo npx pm2 logs
+   sudo npx pm2 logs --err --lines 100 : 에러로깅
+   sudo npx pm2 reload all : 재시작
+ 
+ - EC2 back
+  - npm i pm2 
+
+ - 로컬 back : 배포모드로 수정
+  - npm i cross-env helmet hpp 
+  - app.js : hpp helmet cross-env 설치, cors에서 origin(허용 도메인에 EC2 front주소 추가)
+    const hpp = require('hpp');
+    const helmet = require('helmet');
+    
+    if(process.env.NODE_ENV === 'production'){
+      app.use(morgan('combined'));//좀 더 자세히 로깅함
+      app.use(hpp());
+      app.use(helmet());
+    }else{
+      app.use(morgan('dev'));//요청들어오는 것을 기록으로 남김
+    }
+    app.use(cors({//쿠키를 주고 받을 수 있게 함
+      //'*'-모든 요청을 받아줌, true-보낸곳의 주소가 자동으로 들어감 'http://localhost:3000'-해당 도메인만 허용
+    origin: ['http://localhost:3060','nodebird.com','http://15.164.230.99'], 
+    credentials: true,// true로 해야지 쿠키도 전달됨, front axios에서도 설정해줘야 함
+   
+ - package.jsone에서 script 수정
+    "scripts": {
+      "start": "cross-env NODE_ENV=production npx pm2 start app.js",
+      "dev": "npx nodemon -e js,html app.js"   
+ 
+  - git add, commit, push
+  
+ - EC2 back
+  - sudo git pull
+  - git reset --hard (충돌나면)
+  - npm i (cross-env helmet hpp 추가설치)
+
 //7-5 프론트 서버 배포하기
+ - build 오류 사항 수정한 것들 7-2에 적어 놓음
+ - EC2 front
+  - npm i pm2 
+  - npm run build
+  - sudo npx pm2 start npm -- start : pm2에서 npm 명령어 치기
+  - sudo npx pm2 reload all
+ 
+ - 강사님은 EC2 mysql model 명이 대문자로 생성되어 있어서 오류났음
+  - mysql 문법으로 drop한 다음 재생성하니깐 됐음
+ => 회원가입 한 다음 홈 화면으로 안돌아가고, profile과 id 페이지 등은 오류 남
+ 
+
 //7-6 도메인 연결하기
+- 로그인 하면 로그인 풀리는 이유
+ - 크롬 network창>Response Header 
+  - set-cookie부분에 경고표시 떠 있고, 마우스올리면 samesite~ 때문이라고 나옴//강사님은 도메인이 유효하지 않다는 오류남
+   Set-Cookie: rnbck=s%3AmtOCo8kpgKIWd2fVNpMAgksOcqEzNcBs.TysluB5DhRZwaZAuPfZalBACSYcG6pse6nBun%2FmYewY; 
+   Path=/; Expires=Wed, 05 May 2021 08:33:40 GMT; HttpOnly
+
+ - Cookie의 SameSite 속성은 서로 다른 도메인간의 쿠키 전송에 대한 보안을 설정
+ - backend에서 쿠키를 보낼 때 samesite:"none"과 secure:true를 같이 
+    app.use(expressSession({
+    resave:false,
+    saveUninitialized:false,
+    secret:process.env.COOKIE_SECRET,
+    cookie:{
+      httpOnly:true,
+      sameSite:"none",
+      secure:true,
+      maxAge:2000*60*60 //지속시간 2시간
+    },
+
+
 //7-7 S3연결하기
+
 //7-8 Lambda로 이미지 리사이징하기
+
 //7-9 카카오톡 공유하기 & 강좌마무리
 
 8장 보너스
