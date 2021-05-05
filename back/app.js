@@ -82,7 +82,7 @@ app.use(expressSession({
 	cookie:{
 		httpOnly:true,
 		sameSite:"none",
-		secure:false,
+		secure:true,
 		domain: process.env.NODE_ENV ==='production' && '.aserang.com',//.aserang=>(.)점을 붙여야 api.aserang과 aserang과의 쿠키공유가능
 		maxAge:2000*60*60 //지속시간 2시간
 	},
