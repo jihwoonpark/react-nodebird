@@ -2285,7 +2285,7 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
 - EC2 back
  - git pull 
 
-=> 여전히 로그인 풀림
+=> 여전히 로그인 풀림  => https 문제 인듯
 
 - https로만 접속할 수 있도록 설정한 것 수정하는 방법
  - chrome hsts삭제하는방법
@@ -2293,14 +2293,72 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
 
 
 //7-7 S3연결하기
+- 이미지 관리하는 서버 만들기
+- aws>s3
+ - 버킷만들기 > 버킷이름은 고유한 것으로 > 모든 퍼블릭 액세스 차단 해제 > 버킷만들기 
+ - 권한 > 버킷정책 
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "AddPerm",
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject"
+                ],
+                "Resource": "arn:aws:s3:::aserang/*"
+            }
+        ]
+    }
+ - 내 보안자격증명 > 책세스키 > 새액세스키만들기 > 키파일다운로드(노출되면 안됨)
+
+ - 로컬 back
+  - npm i multer-s3 : multer를 이용해서 s3에 업로드 시 필요
+  - npm i aws-sdk : aws s3의 접근권한을 얻게 해줌
+  - .env에 S3 액세스 키 추가
+  - routes>post.js 수정
+    const multerS3 = require('multer-s3');
+    const AWS = require('aws-sdk');
+    const dotenv = require('dotenv');
+
+    AWS.config.update({
+      accessKeyId: process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      region:process.env.S3_REGION,
+    });
+
+    const upload = multer({
+      storage: multerS3({
+        s3: new AWS.S3(),//S3의 권한(key, id)을 얻음
+        bucket: process.env.S3_BUCKET,//버킷명
+        key(req, file, cb) {
+          cb(null, `original/${Date.now()}_${path.basename(file.originalname)}`)//버킷에 폴더를 만들어서 넣음
+        }
+      }),
+      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+    });
+
+    router.post('/images', isLoggedIn, upload.array('image'), (req, res, next) => { // POST /post/images
+      console.log(req.files);
+      res.json(req.files.map((v) => v.location)); //filename=>location
+    });
+
+  - git add, commit, push
+
 
 //7-8 Lambda로 이미지 리사이징하기
 
+
 //7-9 카카오톡 공유하기 & 강좌마무리
+
 
 8장 보너스
 //8-1 nginx+https 적용하기
+
 //8-2 백엔드에 https 적용하기
+
 //8-3 게시글수정하기
 
 //8-4 빠르게 어드민 페이지 만들기 2021-04-20 수강
@@ -2309,6 +2367,13 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
  -coreui, adminlte
  
 //8-5 팔로잉한 게시글만 가져오기
+
+
+
+
+
+
+
 
 
 
@@ -2540,13 +2605,6 @@ GET /api/user/0/followings 200 66.968 ms - 151
  _document에서도 하위 콤포넌트인 _app의 getInitialProps를 실행해야 함
 - 이제 에러가 뜨지않고 랜더링이 됨, postman에서도 header 잘 보임
 
-
- 
-
-
-
-
-
 //8-5 최적화예제1
 - 하나의 포스트에 하트(좋아요)를 눌렀는데, 전체 포스트가 리랜더링됨
 - component/PostCard에서 function 코드 전체를 memo로 감쌈
@@ -2564,7 +2622,6 @@ GET /api/user/0/followings 200 66.968 ms - 151
   그런데 useEffect를 불러오지 않은것을 eslint가 잡아내지 못함
   eslint-plugin-react-hooks 설치하고 문서에따라서 설정을 해도 못 잡아냄
   npm install eslint-plugin-react-hooks --save-dev
-
 
 //8-6 최적화예제2
 - 팔로우, 언팔로우 누르면 전체 랜더링됨
@@ -2669,11 +2726,3 @@ GET /api/user/0/followings 200 66.968 ms - 151
  - jquery 잘 정리된 사이트
  - https://oscarotero.com/jquery/
    
-
-//8-8 배포전 마지막 준비(IE, 에러표시)
-
-
-//8-9 ec2 생성, 접근하기
-
-
-//8-10 node, mysql설치하기
