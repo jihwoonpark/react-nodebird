@@ -2347,6 +2347,11 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
 
   - git add, commit, push
 
+ - 로컬 front
+  - S3를 쓰면 이미지주소가 res.json(req.files.map((v) => v.location)); location에 담김
+    따라서 backUrl을 써 줬던 곳을 다 지워야 함 | PostForm, PostImages, index
+  
+  - git add, commit, push
 
 //7-8 Lambda로 이미지 리사이징하기
 
