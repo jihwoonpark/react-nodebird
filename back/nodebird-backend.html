@@ -2353,7 +2353,16 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
   
   - git add, commit, push
 
-//7-8 Lambda로 이미지 리사이징하기
+//7-8 Lambda로 이미지 리사이징하기(압축)
+- EC2같은 컴퓨터보다 규모가 작은 함수 = lambda
+- 로컬에서 prepare > lambda폴더생성
+ - npm init
+ - npm i aws-sdk sharp
+ - index.js 
+  - lambda는 aws실행되어서 자동으로 내 정보를 불러오기때문에 key를 입력할 필요가 없음
+  - back 서버는 EC2에서 실행되기때문에 key를 입력해야 함
+  
+   
 
 
 //7-9 카카오톡 공유하기 & 강좌마무리
