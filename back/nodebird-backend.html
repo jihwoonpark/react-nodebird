@@ -2361,8 +2361,69 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
  - index.js 
   - lambda는 aws실행되어서 자동으로 내 정보를 불러오기때문에 key를 입력할 필요가 없음
   - back 서버는 EC2에서 실행되기때문에 key를 입력해야 함
+ - git add, commit, push
+
+ -EC2 back
+  - git pull 
+
+- EC2 lambda 폴더로 이동
+  - sudo su로 root 계정으로 한 후에도 sudo npm i 해야 함 : aws-sdk, sharp 설치
+  - 리눅스에서는 파일 묶기와 압축이 분리되어 있음/ 여기서는 파일을 묶기만 함
+  - apt install zip
+  - zip -r aws-upload.zip ./*
+  => aws-upload.zip 파일이 생겼음
+
+- 리눅스에서 AWS cli 버전2 설치 https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/install-cliv2-linux.html    
+  - unzip awscliv2.zip
+  - sudo ./aws/install
+  - aws --version
+  =>aws 명령어 칠 수 있고, EC2에서 S3로 소스코드를 보내기 위해서 설치
+  - aws configure
+    AWS Access Key ID[none] : 내 key id 입력
+    AWS Secret Access Key [None] : 입력 
+    Default region name [None] : 입력
+    Default output format [None] : json
+  - aws s3 cp "aws-upload.zip" s3://aserang
+  => s3 aserang 버킷에 aws-upload.zip 업로드 됐음
+
+- AWS lambda
+ - 함수생성
+  - 함수이름 : image-resize
+  - 런타임 : node.js 14.x  
+  - 함수생성
+  - ~에서 업로드 > 아마존 S3위치
+   - https://aserang.s3.ap-northeast-2.amazonaws.com/aws-upload.zip
+   - 저장
+  => image-resize"Lambda 함수" 의 배포 패키지가 너무 커서 인라인 코드 편집을 활성화할 수 없습니다. 그러나 함수를 호출할 수 있습니다.
+  - 구성 탭
+   - 일반구성 > 메모리: 256MB, 제한시간 30초,
+   - 트리거 > 트리거추가
+    - S3 선택
+    - 버킷 : aserang
+    - 이벤트유형 : 모든 객체 생성 이벤트    
+    - 접두사 : original/ => lambda가 실행되어 이미지 리사이징을 할 폴더
+      original폴더에 파일이 들어가면 lambda실행 후 thumb폴더에 리사이징 이미지 들어감 
+      접두사 안 붙이면 무한반복 됨
+    - 재귀호출 클릭 후 추가
+    
+  - 런타임 설정
+   - 핸들러 : index.handler => lambda 폴더>index.js 에서 exports.handler 한 이름을 적어야 함
+
+- s3 thumb 폴더에 있는 리사이징된 이미지 가져 오기 
+ - 로컬 back > routes > post
+    router.post('/images', isLoggedIn, upload.array('image'), (req, res, next) => { // POST /post/images  
+    res.json(req.files.map((v) => v.location.replace(/\/original\//,'/thumb'))); //filename=>location
+ - 로컬 front > component > ImageZoom
+    <ImageWrapper key={v.src}>
+        <img src={v.src.replace(/\/thumb\//,'/original/')} alt={v.src}/>
+    </ImageWrapper>
+
+ - git add, commit, push
+
+ - EC2 front, back git pull
   
-   
+
+
 
 
 //7-9 카카오톡 공유하기 & 강좌마무리
