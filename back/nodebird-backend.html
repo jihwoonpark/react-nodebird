@@ -2353,7 +2353,8 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
   
   - git add, commit, push
 
-//7-8 Lambda로 이미지 리사이징하기(압축)
+//7-8 Lambda로 이미지 리사이징하기(압축) 
+//7-9 카카오톡 공유하기 & 강좌마무리
 - EC2같은 컴퓨터보다 규모가 작은 함수 = lambda
 - 로컬에서 prepare > lambda폴더생성
  - npm init
@@ -2431,18 +2432,142 @@ export const getServerSideProps = wrapper.getServerSideProps(async(context)=>{
  - EC2 back 
   - git pull
 
-  
-
-
-
-
-//7-9 카카오톡 공유하기 & 강좌마무리
-
 
 8장 보너스
 //8-1 nginx+https 적용하기
+-https 요청은 443포트로 들어옴
+-nginx가 80포트 요청을 https 443포트로  redirect해줌
+-실제포트를 숨기고 nginx의 80포트를 통해서 프록시하면 보안적으로 막을 수 있다는 것인데 
+ 이것 말고도 정적자료에 대한 gzip압축, 앞단에서의 로그저장, 버퍼오버플로우
+-구조도
+    --------------- front --------------------------
+  443   ---nginx(80)---    443    ---next(3060)---
+ ---->  | ------------|-------->  |              |
+  80    |     ^       |           |              |
+ ---->  | ----^       |           |              |        
 
-//8-2 백엔드에 https 적용하기
+-무료 https 인증서
+ - 3개월마다 갱신하면 무제한으로 쓸 수 있음, 자동 갱신도 할 수 있다고 함
+
+
+- EC2 front 
+ - sudo su 해서 root 권한으로 할 것 
+ - https://www.zerocho.com/category/NodeJS/post/5ef450a5701d8a001f84baeb
+ - certbot을 통해서 인증서를 발급받을 수 있음
+  - snap과 nginx
+  - sudo snap install certbot --classic
+  - sudo apt-get install nginx
+  - vim /etc/nginx/nginx.conf
+    server {
+          listen 80;
+          server_name aserang.com
+          location / {
+                  proxy_set_header Host $host;
+                  proxy_pass http://127.0.0.1:3060;
+                  proxy_redirect off;
+          }
+  }
+  => 설정을 먼저 해둬야지 certbot 실행할때, 설정파일이 자동으로 잘 생성 됨
+
+  - sudo lsof -i tcp:80
+   - 80번 포트에서 실행되는 서버 알려줌
+   - sudo kill -9 26794(PID) => 80 포트에서 실행되는 node서버를 끔
+   - sudo npx pm2 kill  
+  - sudo systemctl start nginx => 백그라운드 프로그램 시작
+  - sudo systemctl stop nginx
+  - sudo systemctl status nginx
+
+  - sudo certbot --nginx
+   - 이메일 주소 입력
+   - domain 입력 : aserang.com www.aserang.com
+    - Congratulations! Your certificate and chain have been saved at:
+      /etc/letsencrypt/live/aserang.com/fullchain.pem
+      Your key file has been saved at:
+      /etc/letsencrypt/live/aserang.com/privkey.pem
+      Your certificate will expire on 2021-08-04. To obtain a new or
+      tweaked version of this certificate in the future, simply run
+      certbot again with the "certonly" option. To non-interactively
+      renew *all* of your certificates, run "certbot renew"
+
+ - vim /etc/nginx/nginx.conf
+   - 설정 도움 웹사이트 
+     https://architectophile.tistory.com/12
+     https://developer88.tistory.com/299
+   - 80포트일 때, return 301(이게 리다이렉트) https://$host$request_uri
+    * aserang.com 도메인으로 443 ssl로 접근하면, ssl인증서 찾아서 이용하고, http://127.0.0.1:3060;로 연결
+    * aserang.com www.aserang.com도메인으로 80포트로 접근하면 https://aserang.com/~~ 로 리다이렉드
+    => 괄호 하나를 안 닫아서 계속 오류가 났었음 ㅜㅜ
+      server {
+              server_name aserang.com www.aserang.com;
+              return 301 https://aserang.com$request_uri;
+          }
+      server {
+              listen 443 ssl; 
+              server_name aserang.com www.aserang.com;
+              ssl_certificate /etc/letsencrypt/live/aserang.com/fullchain.pem; # managed by Certbot
+              ssl_certificate_key /etc/letsencrypt/live/aserang.com/privkey.pem; # managed by Certbot
+              include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+              location / {
+                      proxy_set_header Host $host;
+                      proxy_pass http://127.0.0.1:3060;
+                      proxy_redirect off;
+              }
+      }
+
+ - vim package.json
+  - 현재 nginx가 80포트 쓰고 있기 때문에 포트를 3060으로 바꾸어 준다
+  - start :" ~ -p 3060" 
+  - sudo npx pm2 start npm -- start
+
+//8-2 EC2 백엔드에 https 적용하기
+ - front에서와 동일하게 설치
+ - vim /etc/nginx/nginx.conf
+  server {
+        listen 80;
+        server_name api.aserang.com;
+        location / {
+                proxy_set_header Host $host;
+                proxy_pass http://127.0.0.1:3065;
+                proxy_redirect off;
+        }
+}
+ - sudo lsof -i tcp:80
+   - 80번 포트에서 실행되는 서버 알려줌
+   - sudo kill -9 26794(PID) => 80 포트에서 실행되는 node서버를 끔
+   - sudo npx pm2 kill  
+  - sudo systemctl start nginx => 백그라운드 프로그램 시작
+  - sudo systemctl stop nginx
+  - sudo systemctl status nginx
+
+  - sudo certbot --nginx
+  - Congratulations! Your certificate and chain have been saved at:
+    /etc/letsencrypt/live/api.aserang.com/fullchain.pem
+    Your key file has been saved at:
+    /etc/letsencrypt/live/api.aserang.com/privkey.pem
+    Your certificate will expire on 2021-08-04. To obtain a new or
+    tweaked version of this certificate in the future, simply run
+    certbot again with the "certonly" option. To non-interactively
+    renew *all* of your certificates, run "certbot renew"
+
+ - vim app.js
+  - port를 3065로 수정
+
+ - nginx에서 에러나 났을 때, 에러 보는 방법
+  - tail /var/log/nginx/error.log
+
+- front back 서버 둘 다 https 적용을 했는데 mixed 오류가 남
+  Mixed Content: The page at 'https://aserang.com/' was loaded over HTTPS, 
+  but requested an insecure XMLHttpRequest endpoint 'http://api.aserang.com/user/login'. 
+  This request has been blocked; the content must be served over HTTPS.
+
+- EC2 front에서 backUrl 를 https://api.aserang.com'로 수정 함
+ - vim config/config.js
+  backUrl = process.env.NODE_ENV === 'production' ? 'https://api.aserang.com' : 'http://localhost:3065';
+  => '//api.aserang.com' 이렇게 쓰면 요청에 따라 자동으로 http or https로 된다고 함
+
+- EC2 back app.js
+ - cors > origin https://aserang.com으로 수정
 
 //8-3 게시글수정하기
 

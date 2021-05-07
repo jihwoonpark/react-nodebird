@@ -50,8 +50,6 @@ const upload = multer({
 //   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB로 파일크기 제한
 // });
 
-
-
 //front input 하나에서 text만있으면 none, 한개사진 single, 여러사진 array,
 //여러 input에서 여러사진 fields
 //multer에서도 단순 text는 req.body로 받게 함, 
